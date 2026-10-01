@@ -1,43 +1,129 @@
 # Cascater
-Plugin Cascater para GLPI
 
+**Seleção de categorias em cascata para o GLPI.** Em vez de uma lista única e enorme de categorias, o Cascater mostra um menu por nível: você escolhe a categoria principal, aparece o menu das subcategorias dela, e assim por diante.
 
-Cascater é um plugin de código aberto para o GLPI que resolve um dos maiores desafios de usabilidade em sistemas de ITSM: a seleção de categorias de chamados. Ele transforma a lista de categorias única e interminável do GLPI numa série de menus suspensos dinâmicos e em cascata, tornando o processo de classificação de chamados mais rápido, intuitivo e à prova de erros.
+```
+Antes:  [ Hardware > Impressoras > Atolamento de papel          ▼ ]   ← lista com centenas de itens
 
-O Problema que o Cascater Resolve
-Em ambientes GLPI com uma árvore de categorias complexa, os utilizadores e técnicos enfrentam uma lista única com dezenas ou centenas de opções. Isto leva a:
+Depois: [ Hardware            ▼ ]
+        [ Impressoras         ▼ ]
+        [ Atolamento de papel ▼ ]
+```
 
-Perda de tempo: Procurar a categoria correta é demorado.
+| Versão do GLPI | Suporte |
+|---|---|
+| **11.0.x** | ✅ |
+| **10.0.x** | ✅ |
 
-Erros de Classificação: É fácil selecionar a categoria errada, o que prejudica a triagem e as métricas do helpdesk.
+---
 
-Frustração do Utilizador: Uma má experiência de utilizador pode diminuir a adoção da ferramenta.
+## Funcionalidades
 
-Antes do Cascater:
-A Solução com o Cascater
-O Cascater substitui a lista única por uma abordagem em cascata. Ao selecionar uma categoria principal, um novo menu aparece apenas com as subcategorias relevantes, guiando o utilizador de forma lógica até à sua escolha final.
+- **Menus em cascata** para qualquer profundidade de categorias.
+- **Respeita as mesmas regras do campo nativo do GLPI:**
+  - entidades do usuário e da entidade do chamado (inclusive categorias recursivas);
+  - opção **"Visível na interface simplificada"** para usuários do autoatendimento;
+  - opções **"Visível para incidentes / requisições"** conforme o tipo do chamado.
+- **Funciona com modelos de chamado:** ao escolher a categoria final em um chamado novo, o GLPI recarrega o formulário e aplica o modelo da categoria (campos obrigatórios e pré-definidos), como no campo nativo.
+- **Edição de chamados:** abre com o caminho da categoria atual já selecionado.
+- **Troca de tipo** (incidente ou requisição): os menus são refeitos com as categorias válidas para o novo tipo.
+- **Rápido:** a árvore é carregada uma única vez por formulário; navegar entre os níveis não faz novas requisições.
+- **Seguro:** só usuários autenticados acessam as categorias, e o campo original continua sendo o que é enviado ao GLPI.
+- **Não altera o banco de dados:** instalar ou remover o plugin não cria nem apaga nada.
 
-Com o Cascater:
-Funcionalidades Principais
-Seleção em Cascata: Navegue por árvores de categorias complexas de forma simples e rápida.
+### Onde o plugin atua
 
-Filtro Inteligente: As subcategorias são filtradas automaticamente com base no tipo de chamado (Incidente/Requisição) a partir do segundo nível.
+| Tela | GLPI 10 | GLPI 11 |
+|---|---|---|
+| Formulário do chamado (criação e edição, interface padrão) | ✅ | ✅ |
+| Abertura de chamado na interface simplificada (autoatendimento) | ✅ | — ¹ |
+| Problemas, Mudanças e demais telas | Não altera | Não altera |
 
-Compatibilidade Total: Funciona tanto na criação de novos chamados como na edição de chamados existentes, carregando e pré-selecionando a árvore de categorias correta.
+¹ No GLPI 11, o autoatendimento abre chamados pelo novo módulo **Formulários**, e não mais pelo formulário de chamado. Nos Formulários, a própria pergunta de categoria permite limitar a árvore a partir de uma categoria raiz e com profundidade máxima.
 
-Integração Nativa: Totalmente integrado com a interface do GLPI, funcionando tanto no modo padrão (para técnicos) como no simplificado (helpdesk.public.php).
+---
 
-Instalação
-Aceda à secção de "Releases" deste repositório.
+## Instalação
 
-Descarregue o ficheiro .zip da versão mais recente.
+1. Baixe o arquivo **`cascater-x.y.z.zip`** da [última Release](https://github.com/GustavoMS0/Cascater/releases/latest).
+2. Extraia o conteúdo na pasta de plugins do GLPI. A estrutura deve ficar assim:
+   ```
+   glpi/plugins/Cascater/setup.php
+   ```
+   > O nome da pasta precisa ser exatamente **`Cascater`**.
+3. No GLPI, acesse **Configurar › Plugins** e clique em **Instalar** e depois em **Ativar** no Cascater.
 
-Descomprima o ficheiro na pasta plugins/ da sua instalação do GLPI. A estrutura final deve ser glpi/plugins/Cascater/.
+Pronto. Não há nada para configurar: o campo de categoria dos chamados passa a funcionar em cascata.
 
-No GLPI, aceda a Configurar > Plugins, e depois clique em "Instalar" e "Ativar" no plugin Cascater.
+### Instalação pelo terminal (servidor Linux)
 
-Como Usar
-Após a instalação, o plugin irá substituir automaticamente o campo de categoria padrão nos formulários de criação e edição de chamados. Não é necessária qualquer configuração adicional.
+```bash
+cd /var/www/glpi/plugins            # ajuste para o caminho do seu GLPI
+VERSAO=$(curl -fsSL https://api.github.com/repos/GustavoMS0/Cascater/releases/latest | grep -oP '"tag_name": "v\K[^"]+')
+curl -fsSL -o cascater.zip "https://github.com/GustavoMS0/Cascater/releases/download/v$VERSAO/cascater-$VERSAO.zip"
+unzip -o cascater.zip && rm cascater.zip
+chown -R root:root Cascater
 
-Licença
-Este plugin é distribuído sob a licença GNU General Public License v3.0. Veja o ficheiro LICENSE para mais detalhes.
+# Instala e ativa sem abrir o navegador
+sudo -u www-data php ../bin/console plugin:install --username=glpi Cascater
+sudo -u www-data php ../bin/console plugin:activate Cascater
+```
+
+### Atualizando da versão 2.x
+
+A versão 3 mudou a estrutura de pastas. **Apague a pasta antiga antes de copiar a nova**, para não sobrarem arquivos da versão anterior:
+
+```bash
+rm -rf /var/www/glpi/plugins/Cascater
+# depois siga os passos de instalação acima
+```
+
+Depois de copiar, o GLPI mostra o plugin como "a atualizar". Clique em **Instalar** e em **Ativar** novamente.
+
+---
+
+## Como funciona
+
+1. Ao abrir um chamado, o plugin busca de uma vez a árvore de categorias permitidas para o usuário, a entidade e o tipo do chamado.
+2. O campo de categoria original fica **oculto, mas continua no formulário**. Cada escolha nos menus atualiza esse campo. Por isso validações, campos obrigatórios e modelos de chamado continuam funcionando.
+3. Uma categoria que **não vale para o tipo do chamado**, mas tem subcategorias válidas, aparece em *itálico*. Ela serve só para navegar até as subcategorias.
+4. Se o plugin não conseguir carregar as categorias, por qualquer motivo, o campo nativo do GLPI aparece normalmente. O chamado nunca fica sem campo de categoria.
+
+---
+
+## Solução de problemas
+
+| Sintoma | O que verificar |
+|---|---|
+| O campo continua com a lista única | Confira se o plugin está **Ativado** em Configurar › Plugins e limpe o cache do navegador (Ctrl+F5) |
+| Alguma categoria não aparece | Confira, na categoria, a **entidade**, a opção **"Visível na interface simplificada"** (para usuários do autoatendimento) e **"Visível para incidentes / requisições"** |
+| Erro `404` para `cascater.js` no console do navegador | O nome da pasta precisa ser exatamente `Cascater`, com a estrutura `plugins/Cascater/public/js/cascater.js` |
+| Mensagem `Cascater: falha ao carregar categorias` no console | Abra `/plugins/Cascater/ajax/categories.php` logado no GLPI; a resposta deve ser uma lista em JSON. Veja também o log de erros do PHP |
+
+---
+
+## Desenvolvimento
+
+```
+Cascater/
+├── setup.php               Registro do plugin e dos hooks (GLPI 10 e 11)
+├── ajax/categories.php     Endpoint JSON com a árvore de categorias filtrada
+└── public/
+    ├── js/cascater.js      Interface em cascata
+    └── css/cascater.css
+```
+
+Para publicar uma nova versão, atualize `PLUGIN_CASCATER_VERSION` em `setup.php` e o [CHANGELOG](CHANGELOG.md) e crie a tag:
+
+```bash
+git tag v3.0.0
+git push origin v3.0.0
+```
+
+O GitHub Actions gera o arquivo `cascater-3.0.0.zip` e publica a Release automaticamente.
+
+---
+
+## Licença
+
+Distribuído sob a licença **GNU General Public License v3.0 ou posterior**. Veja o arquivo [LICENSE](LICENSE).

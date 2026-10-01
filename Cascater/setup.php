@@ -5,9 +5,9 @@
  * Cascater
  *
  * Plugin para GLPI que divide a seleção de categorias de chamados
- * em múltiplos menus suspensos dinâmicos.
+ * em múltiplos menus suspensos dinâmicos (em cascata).
  *
- * Copyright (C) 2024 by G. Martins
+ * Copyright (C) 2024-2026 by G. Martins
  * ------------------------------------------------------------------------
  *
  * LICENSE
@@ -29,44 +29,59 @@
  * ------------------------------------------------------------------------
  */
 
-define('PLUGIN_CASCATER_VERSION', '2.0.1');
+define('PLUGIN_CASCATER_VERSION', '3.0.0');
 define('PLUGIN_CASCATER_MIN_GLPI', '10.0.0');
-define('PLUGIN_CASCATER_MAX_GLPI', '10.9.99');
+define('PLUGIN_CASCATER_MAX_GLPI', '11.0.99');
 
 /**
- * Função de inicialização do plugin.
- * Define os hooks necessários para o funcionamento.
+ * Páginas em que o plugin atua. O hook "add_javascript" do GLPI ignora o nome
+ * da página e carrega o arquivo em todas as telas, por isso o filtro é feito aqui.
  */
-function plugin_init_Cascater() {
+function plugin_cascater_is_target_page(): bool
+{
+    $uri = parse_url($_SERVER['REQUEST_URI'] ?? '', PHP_URL_PATH) ?: '';
+
+    foreach (['/front/ticket.form.php', '/front/helpdesk.public.php', '/front/tracking.injector.php'] as $page) {
+        if (str_ends_with($uri, $page)) {
+            return true;
+        }
+    }
+    return false;
+}
+
+/**
+ * Inicialização do plugin: registra os hooks.
+ */
+function plugin_init_cascater()
+{
     global $PLUGIN_HOOKS;
 
     $PLUGIN_HOOKS['csrf_compliant']['Cascater'] = true;
 
-    // Registra os ficheiros JavaScript a serem carregados nas páginas de chamado
-    $PLUGIN_HOOKS['add_javascript']['Cascater'] = [
-        'ticket.form.php'     => 'js/splitcat.js',
-        'helpdesk.public.php' => 'js/splitcat.js'
-    ];
-    
-    // Registra os ficheiros CSS a serem carregados
-    $PLUGIN_HOOKS['add_css']['Cascater'] = [
-         'ticket.form.php'     => 'css/splitcat.css',
-         'helpdesk.public.php' => 'css/splitcat.css'
-    ];
+    if (!plugin_cascater_is_target_page()) {
+        return;
+    }
+
+    // GLPI 11 serve os arquivos estáticos a partir da pasta "public/" do plugin
+    // (URL sem o prefixo "public"); o GLPI 10 usa o caminho real a partir da raiz do plugin.
+    $prefix = version_compare(GLPI_VERSION, '11.0.0-dev', '>=') ? '' : 'public/';
+
+    $PLUGIN_HOOKS['add_javascript']['Cascater'] = [$prefix . 'js/cascater.js'];
+    $PLUGIN_HOOKS['add_css']['Cascater']        = [$prefix . 'css/cascater.css'];
 }
 
 /**
- * Função que retorna as informações do plugin para a interface do GLPI.
- * @return array
+ * Informações do plugin exibidas em Configurar > Plugins.
  */
-function plugin_version_Cascater() {
+function plugin_version_cascater()
+{
     return [
-        'name'           => 'Cascater',
-        'version'        => PLUGIN_CASCATER_VERSION,
-        'author'         => 'G. Martins',
-        'license'        => 'GPLv3',
-        'homepage'       => '',
-        'requirements'   => [
+        'name'         => 'Cascater',
+        'version'      => PLUGIN_CASCATER_VERSION,
+        'author'       => 'G. Martins',
+        'license'      => 'GPLv3+',
+        'homepage'     => 'https://github.com/GustavoMS0/Cascater',
+        'requirements' => [
             'glpi' => [
                 'min' => PLUGIN_CASCATER_MIN_GLPI,
                 'max' => PLUGIN_CASCATER_MAX_GLPI,
@@ -75,32 +90,23 @@ function plugin_version_Cascater() {
     ];
 }
 
-/**
- * Função para verificar pré-requisitos antes da instalação.
- * @return boolean
- */
-function plugin_Cascater_check_prerequisites() {
-    // Atualmente não há pré-requisitos, retorna sempre verdadeiro.
+function plugin_cascater_check_prerequisites()
+{
     return true;
 }
 
-/**
- * Função para verificar a configuração do plugin.
- * @param boolean $verbose
- * @return boolean
- */
-function plugin_Cascater_check_config($verbose = false) {
-    if ($verbose) {
-        echo 'Instalado e pronto para usar.';
-    }
+function plugin_cascater_check_config($verbose = false)
+{
     return true;
 }
 
-// Funções de instalação e desinstalação
-function plugin_Cascater_install() {
+// O plugin não cria tabelas nem configurações.
+function plugin_cascater_install()
+{
     return true;
 }
 
-function plugin_Cascater_uninstall() {
+function plugin_cascater_uninstall()
+{
     return true;
 }

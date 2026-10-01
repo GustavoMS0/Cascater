@@ -1,0 +1,29 @@
+/* Cascater - o campo nativo fica oculto, mas continua no formulário */
+.cascater-enhanced > select[name="itilcategories_id"],
+.cascater-enhanced > .select2-container {
+    display: none !important;
+}
+
+.cascater {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    flex: 1 1 auto;
+    min-width: 0;
+    width: 100%;
+}
+
+.cascater .cascater-level {
+    width: 100%;
+}
+
+.cascater .cascater-current {
+    font-size: 0.85em;
+    color: var(--tblr-warning, #b45309);
+}
+
+/* Categoria usada só para navegar (não pode ser escolhida para este tipo) */
+.cascater .cascater-level option.cascater-nav-only {
+    font-style: italic;
+    color: var(--tblr-secondary, #6c757d);
+}
