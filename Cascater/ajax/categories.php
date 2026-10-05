@@ -105,14 +105,28 @@ for ($depth = 0; $depth < 30; $depth++) {
 }
 
 if ($nodes !== [] && Session::haveTranslations('ITILCategory', 'name')) {
+    $ids = array_keys($nodes);
+    $lang = $_SESSION['glpilanguage'] ?? 'pt_BR';
+    $translations = [];
+    $trans_iter = $DB->request([
+        'SELECT' => ['items_id', 'value'],
+        'FROM'   => 'glpi_dropdowntranslations',
+        'WHERE'  => [
+            'itemtype' => 'ITILCategory',
+            'field'    => 'name',
+            'language' => $lang,
+            'items_id' => $ids,
+        ],
+    ]);
+    foreach ($trans_iter as $trow) {
+        if (!empty($trow['value'])) {
+            $translations[(int) $trow['items_id']] = (string) $trow['value'];
+        }
+    }
     foreach ($nodes as &$node) {
-        $node['name'] = DropdownTranslation::getTranslatedValue(
-            $node['id'],
-            'ITILCategory',
-            'name',
-            $_SESSION['glpilanguage'],
-            $node['name']
-        );
+        if (isset($translations[$node['id']])) {
+            $node['name'] = $translations[$node['id']];
+        }
     }
     unset($node);
 }

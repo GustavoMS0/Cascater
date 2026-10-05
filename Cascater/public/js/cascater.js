@@ -190,8 +190,8 @@
             addLevel(id, path[index + 1]);
         });
 
-        // Troca de tipo sem recriar o campo (o GLPI 11 recria; o observer cuida disso).
-        $select.closest('form').off('change.cascater').on('change.cascater', '[name="type"]', function () {
+        // Troca de tipo ou de entidade sem recriar o campo (o GLPI 11 recria; o observer cuida disso).
+        $select.closest('form').off('change.cascater').on('change.cascater', '[name="type"], [name="entities_id"]', function () {
             setTimeout(function () {
                 if (document.contains($select[0]) && $select.data('cascater')) {
                     $box.remove();
