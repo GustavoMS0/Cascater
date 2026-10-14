@@ -7,14 +7,16 @@
  *
  * GET ajax/categories.php?entity=<id>&type=<1|2>
  *
- * Retorna, em JSON, todas as categorias que o usuário pode escolher, já
- * filtradas pelas mesmas regras do campo nativo do GLPI:
+ * Retorna, em JSON, { categories: [...], strings: {...} }. Em "categories",
+ * todas as categorias que o usuário pode escolher, já filtradas pelas mesmas
+ * regras do campo nativo do GLPI:
  *   - entidades ativas do usuário (ou a entidade do chamado), com recursividade;
  *   - "Visível na interface simplificada" quando o usuário está no helpdesk;
  *   - "Visível para incidentes / requisições" conforme o tipo do chamado.
  *
  * Categorias que não atendem aos filtros, mas são pais de categorias válidas,
  * também são retornadas com "selectable": false, para permitir a navegação.
+ * Em "strings", os textos da interface já traduzidos para o idioma do usuário.
  *
  * This file is part of Cascater project (GPLv3+).
  * ------------------------------------------------------------------------
@@ -27,8 +29,11 @@ if (!defined('GLPI_ROOT')) {
 
 Session::checkLoginUser();
 
-/** @var DBmysql $DB */
-global $DB;
+/**
+ * @var DBmysql $DB
+ * @var array   $CFG_GLPI
+ */
+global $DB, $CFG_GLPI;
 
 $table = ITILCategory::getTable();
 
@@ -39,8 +44,10 @@ if (is_numeric($entity) && (int) $entity >= 0 && Session::haveAccessToEntity((in
     $entity_restrict = (int) $entity;
 }
 
+$entity_criteria = getEntitiesRestrictCriteria($table, '', $entity_restrict, true);
+
 $where = [
-    getEntitiesRestrictCriteria($table, '', $entity_restrict, true),
+    $entity_criteria,
 ];
 
 if (Session::getCurrentInterface() === 'helpdesk') {
@@ -71,7 +78,8 @@ foreach ($iterator as $row) {
     ];
 }
 
-// Adiciona os ancestrais ausentes (somente navegação), nível a nível.
+// Adiciona os ancestrais ausentes (somente navegação), nível a nível, com a mesma
+// restrição de entidade: pai fora das entidades do usuário não é exposto.
 for ($depth = 0; $depth < 30; $depth++) {
     $missing = [];
     foreach ($nodes as $node) {
@@ -83,30 +91,27 @@ for ($depth = 0; $depth < 30; $depth++) {
         break;
     }
 
-    $found = 0;
-    foreach ($DB->request(['SELECT' => ['id', 'name', 'itilcategories_id'], 'FROM' => $table, 'WHERE' => ['id' => array_values($missing)]]) as $row) {
+    foreach ($DB->request(['SELECT' => ['id', 'name', 'itilcategories_id'], 'FROM' => $table, 'WHERE' => ['id' => array_values($missing), $entity_criteria]]) as $row) {
         $nodes[(int) $row['id']] = [
             'id'         => (int) $row['id'],
             'parent'     => (int) $row['itilcategories_id'],
             'name'       => (string) $row['name'],
             'selectable' => false,
         ];
-        $found++;
     }
-    if ($found === 0) {
-        // Pai inexistente (base inconsistente): trata os filhos como raiz.
-        foreach ($nodes as &$node) {
-            if (isset($missing[$node['parent']])) {
-                $node['parent'] = 0;
-            }
+    // Pai inexistente (base inconsistente) ou fora das entidades do usuário:
+    // trata os filhos como raiz.
+    foreach ($nodes as &$node) {
+        if (isset($missing[$node['parent']]) && !isset($nodes[$node['parent']])) {
+            $node['parent'] = 0;
         }
-        unset($node);
     }
+    unset($node);
 }
 
 if ($nodes !== [] && Session::haveTranslations('ITILCategory', 'name')) {
     $ids = array_keys($nodes);
-    $lang = $_SESSION['glpilanguage'] ?? 'pt_BR';
+    $lang = $_SESSION['glpilanguage'] ?? $CFG_GLPI['language'];
     $translations = [];
     $trans_iter = $DB->request([
         'SELECT' => ['items_id', 'value'],
@@ -131,6 +136,17 @@ if ($nodes !== [] && Session::haveTranslations('ITILCategory', 'name')) {
     unset($node);
 }
 
+// Textos da interface, traduzidos pelo GLPI (domínio "Cascater", pasta locales/).
+// %1$s, %2$s... são preenchidos pelo cascater.js.
+$strings = [
+    'field'       => __('Categoria', 'Cascater'),
+    'level'       => __('%1$s (nível %2$s)', 'Cascater'),
+    'unavailable' => __('Categoria atual: %1$s (não disponível para este tipo de chamado)', 'Cascater'),
+];
+
 header('Content-Type: application/json; charset=UTF-8');
 header('Cache-Control: no-store');
-echo json_encode(array_values($nodes), JSON_UNESCAPED_UNICODE);
+echo json_encode([
+    'categories' => array_values($nodes),
+    'strings'    => $strings,
+], JSON_UNESCAPED_UNICODE);

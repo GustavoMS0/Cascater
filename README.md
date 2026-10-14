@@ -1,5 +1,7 @@
 # Cascater
 
+> **Plugin para o [GLPI](https://glpi-project.org/)** (PHP + JavaScript), compatível com o **GLPI 10.0.x e 11.0.x** (PHP 8.x). Instale-o na pasta `plugins/` do GLPI; ele não funciona sozinho.
+
 **Seleção de categorias em cascata para o GLPI.** Em vez de uma lista única e enorme de categorias, o Cascater mostra um menu por nível: você escolhe a categoria principal, aparece o menu das subcategorias dela, e assim por diante.
 
 ```
@@ -28,6 +30,8 @@ Depois: [ Hardware            ▼ ]
 - **Edição de chamados:** abre com o caminho da categoria atual já selecionado.
 - **Troca de tipo** (incidente ou requisição): os menus são refeitos com as categorias válidas para o novo tipo.
 - **Rápido:** a árvore é carregada uma única vez por formulário; navegar entre os níveis não faz novas requisições.
+- **Acessível:** cada menu tem um nome para leitores de tela (o rótulo do campo e o nível) e o rótulo do campo aponta para o primeiro menu.
+- **Traduzível:** os textos da interface vêm do GLPI, pelo domínio de tradução `Cascater` (veja `locales/`).
 - **Seguro:** só usuários autenticados acessam as categorias, e o campo original continua sendo o que é enviado ao GLPI.
 - **Não altera o banco de dados:** instalar ou remover o plugin não cria nem apaga nada.
 
@@ -98,7 +102,7 @@ Depois de copiar, o GLPI mostra o plugin como "a atualizar". Clique em **Instala
 | O campo continua com a lista única | Confira se o plugin está **Ativado** em Configurar › Plugins e limpe o cache do navegador (Ctrl+F5) |
 | Alguma categoria não aparece | Confira, na categoria, a **entidade**, a opção **"Visível na interface simplificada"** (para usuários do autoatendimento) e **"Visível para incidentes / requisições"** |
 | Erro `404` para `cascater.js` no console do navegador | O nome da pasta precisa ser exatamente `Cascater`, com a estrutura `plugins/Cascater/public/js/cascater.js` |
-| Mensagem `Cascater: falha ao carregar categorias` no console | Abra `/plugins/Cascater/ajax/categories.php` logado no GLPI; a resposta deve ser uma lista em JSON. Veja também o log de erros do PHP |
+| Mensagem `Cascater: falha ao carregar categorias` no console | Abra `/plugins/Cascater/ajax/categories.php` logado no GLPI; a resposta deve ser um JSON com a lista de categorias (`categories`). Veja também o log de erros do PHP |
 
 ---
 
@@ -108,6 +112,7 @@ Depois de copiar, o GLPI mostra o plugin como "a atualizar". Clique em **Instala
 Cascater/
 ├── setup.php               Registro do plugin e dos hooks (GLPI 10 e 11)
 ├── ajax/categories.php     Endpoint JSON com a árvore de categorias filtrada
+├── locales/Cascater.pot    Modelo de tradução (domínio "Cascater"; textos-fonte em português)
 └── public/
     ├── js/cascater.js      Interface em cascata
     └── css/cascater.css

@@ -1,0 +1,38 @@
+# Cascater - modelo de tradução (domínio "Cascater", o mesmo nome da pasta do plugin).
+# Copyright (C) 2024-2026 G. Martins
+# This file is distributed under the same license as the Cascater package (GPLv3+).
+#
+# Os textos-fonte estão em português. Para traduzir, copie este arquivo para
+# <idioma>.po (ex.: en_GB.po) nesta pasta, preencha os msgstr e gere o <idioma>.mo
+# (ex.: msgfmt en_GB.po -o en_GB.mo).
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: Cascater\n"
+"Report-Msgid-Bugs-To: https://github.com/GustavoMS0/Cascater/issues\n"
+"POT-Creation-Date: 2026-10-14 00:00+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=INTEGER; plural=EXPRESSION;\n"
+
+#: ajax/categories.php
+msgid "Categoria"
+msgstr ""
+
+#. %1$s: nome do campo; %2$s: número do nível
+#: ajax/categories.php
+#, php-format
+msgid "%1$s (nível %2$s)"
+msgstr ""
+
+#. %1$s: nome da categoria atual
+#: ajax/categories.php
+#, php-format
+msgid "Categoria atual: %1$s (não disponível para este tipo de chamado)"
+msgstr ""

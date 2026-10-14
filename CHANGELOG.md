@@ -1,5 +1,22 @@
 # Changelog
 
+## [Unreleased]
+
+### Corrigido
+- Com mais de um campo de categoria no mesmo formulário, só o último era refeito ao trocar o tipo ou a entidade; agora cada campo tem o seu próprio handler.
+- A troca de tipo ou entidade esperava um atraso fixo de 300 ms; agora os menus são refeitos quando o GLPI atualiza o campo original (com limite de 1,5 s).
+- A busca das categorias-pai (usadas só para navegação) não respeitava as entidades do usuário; agora usa a mesma restrição de entidade da busca principal.
+- Sem idioma na sessão, as traduções de categoria usavam `pt_BR` fixo; agora usam o idioma padrão do GLPI.
+
+### Adicionado
+- Acessibilidade: cada menu da cascata tem `aria-label` (rótulo do campo e nível) e o `<label>` do campo aponta para o primeiro menu.
+- Textos da interface traduzíveis pelo GLPI (domínio `Cascater`), com o modelo `locales/Cascater.pot`.
+- `.gitignore` e `.gitattributes`.
+
+### Alterado
+- `ajax/categories.php` passa a responder `{ categories, strings }` (o script continua aceitando a lista simples do formato anterior).
+- Ações do GitHub fixadas por SHA de commit.
+
 ## [3.0.0] - 2026-10-01
 
 ### Adicionado
