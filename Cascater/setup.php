@@ -56,6 +56,7 @@ function plugin_init_cascater()
 {
     global $PLUGIN_HOOKS;
 
+    $PLUGIN_HOOKS['csrf_compliant']['cascater'] = true;
     $PLUGIN_HOOKS['csrf_compliant']['Cascater'] = true;
 
     if (!plugin_cascater_is_target_page()) {
@@ -66,7 +67,9 @@ function plugin_init_cascater()
     // (URL sem o prefixo "public"); o GLPI 10 usa o caminho real a partir da raiz do plugin.
     $prefix = version_compare(GLPI_VERSION, '11.0.0-dev', '>=') ? '' : 'public/';
 
+    $PLUGIN_HOOKS['add_javascript']['cascater'] = [$prefix . 'js/cascater.js'];
     $PLUGIN_HOOKS['add_javascript']['Cascater'] = [$prefix . 'js/cascater.js'];
+    $PLUGIN_HOOKS['add_css']['cascater']        = [$prefix . 'css/cascater.css'];
     $PLUGIN_HOOKS['add_css']['Cascater']        = [$prefix . 'css/cascater.css'];
 }
 
