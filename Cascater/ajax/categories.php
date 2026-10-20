@@ -28,6 +28,12 @@ if (!defined('GLPI_ROOT')) {
 }
 
 Session::checkLoginUser();
+if (!Session::haveRight('ticket', CREATE) && !Session::haveRight('ticket', READ)) {
+    http_response_code(403);
+    header('Content-Type: application/json; charset=UTF-8');
+    echo json_encode(['error' => 'Acesso negado às categorias.'], JSON_UNESCAPED_UNICODE);
+    exit;
+}
 
 /**
  * @var DBmysql $DB
