@@ -101,6 +101,16 @@
         }
         $select.data('cascater', true);
 
+        const $wrapper = $select.parent();
+        let $tempBox = $wrapper.find('.cascater');
+        if (!$tempBox.length) {
+            $tempBox = $('<div class="cascater is-loading"></div>');
+            $select.after($tempBox);
+            $wrapper.addClass('cascater-enhanced');
+        } else {
+            $tempBox.addClass('is-loading');
+        }
+
         const ctx = getContext($select);
         fetchTree(ctx.entity, ctx.type)
             .done(function (tree) {
@@ -110,7 +120,12 @@
             })
             .fail(function (xhr) {
                 $select.removeData('cascater');
+                $tempBox.removeClass('is-loading').remove();
+                $wrapper.removeClass('cascater-enhanced');
                 console.warn('Cascater: falha ao carregar categorias, mantendo o campo padrão.', xhr && xhr.status);
+            })
+            .always(function () {
+                $tempBox.removeClass('is-loading');
             });
     }
 
